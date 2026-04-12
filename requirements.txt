@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-anthropic
+fpdf2
 youtube-transcript-api
 python-dotenv
 httpx
