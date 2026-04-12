@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+anthropic
+youtube-transcript-api
+python-dotenv
+httpx
