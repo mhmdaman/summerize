@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import anthropic
+import httpx
 import os
 import json
+import re
 from dotenv import load_dotenv
 from summarizer import extract_video_id, fetch_video_meta, fetch_transcript
 
@@ -18,35 +19,56 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 class SummarizeRequest(BaseModel):
     url: str
-    detail: str = "standard"  # brief | standard | deep
+    detail: str = "standard"
 
 DETAIL_PROMPTS = {
-    "brief": "3-4 key points and 3-4 timestamp markers",
-    "standard": "5-6 key points and 5-6 timestamp markers",
-    "deep": "7-8 key points, 7-8 timestamps, and detailed notes per timestamp"
+    "brief": "2-3 sections with key concepts and 3 practice questions",
+    "standard": "4-5 sections with examples, common mistakes and 5 practice questions",
+    "deep": "6-8 detailed sections with step-by-step methods, common mistakes and 8 practice questions"
 }
 
-SYSTEM_PROMPT = """You are an expert YouTube video analyst. You will be given a video title, channel name, and optionally the real transcript with timestamps.
+SYSTEM_PROMPT = """You are an expert educational content writer. You convert YouTube video content into comprehensive, structured study documents like textbook notes.
 
 Respond ONLY with a valid JSON object in this exact format:
 {
-  "tldr": "2-3 sentence overall summary",
-  "keyPoints": [
-    {"num": 1, "point": "Key insight or takeaway"}
+  "title": "Topic title",
+  "introduction": "2-3 sentence overview of what this topic covers",
+  "sections": [
+    {
+      "heading": "Section heading",
+      "subsections": [
+        {
+          "subheading": "Subsection heading",
+          "content": "Clear concise explanation in bullet points or short paragraphs",
+          "keyTerms": ["term: definition", "formula: explanation"],
+          "example": "A simple real-world example or analogy to understand this concept",
+          "mnemonic": "A memory trick or mnemonic to remember this (if applicable)",
+          "examQuestion": "A quick exam-style question to test understanding of this subsection"
+        }
+      ]
+    }
   ],
-  "timestamps": [
-    {"time": "0:00", "topic": "Topic name", "note": "Brief description"}
+  "keyConceptsSummary": ["concept 1", "concept 2", "concept 3"],
+  "commonMistakes": ["mistake 1", "mistake 2", "mistake 3"],
+  "practiceQuestions": [
+    {"q": "Question here?", "a": "Answer here"}
   ],
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "sentiment": "Educational / Entertaining / Inspirational / Technical",
-  "difficulty": "Beginner / Intermediate / Advanced"
+  "quickRevisionSummary": "5-6 sentence paragraph covering all key points for last-minute revision"
 }
 
-No markdown, no backticks. Pure JSON only."""
+Rules:
+- No timestamps, no casual speech, no fillers
+- Language must be clear, concise, and exam-oriented
+- Structure like a textbook chapter
+- Use bullet points or short paragraphs for content
+- Bold key terms, definitions, and formulas using **term** syntax
+- Add examples, mnemonics, and analogies wherever helpful
+- Add a quick exam-style question at the end of each subsection
+- No markdown, no backticks. Pure JSON only."""
 
 @app.post("/summarize")
 async def summarize(req: SummarizeRequest):
@@ -57,10 +79,8 @@ async def summarize(req: SummarizeRequest):
     meta = await fetch_video_meta(video_id)
     transcript = fetch_transcript(video_id)
 
-    transcript_section = ""
     if transcript:
-        # Limit transcript to ~3000 chars to stay within token limits
-        transcript_section = f"\n\nReal transcript (use these timestamps accurately):\n{transcript[:3000]}"
+        transcript_section = f"\n\nReal transcript:\n{transcript[:3000]}"
     else:
         transcript_section = "\n\n(No transcript available — generate plausible summary from title/channel.)"
 
@@ -68,20 +88,43 @@ async def summarize(req: SummarizeRequest):
 URL: {req.url}
 Detail level: {DETAIL_PROMPTS[req.detail]}{transcript_section}
 
-Generate the structured summary now."""
+Generate the structured study document now."""
 
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1200,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}]
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "deepseek/deepseek-v3.2",
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message}
+                ],
+                "max_tokens": 4000
+            },
+            timeout=30
+        )
 
-    raw = message.content[0].text.strip()
+    data = response.json()
+
+    if "error" in data:
+        raise HTTPException(status_code=500, detail=data["error"]["message"])
+
+    raw = data["choices"][0]["message"]["content"].strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
+
+    json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if json_match:
+        raw = json_match.group(0)
+
     try:
         summary = json.loads(raw)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Failed to parse Claude response")
+        print("RAW MODEL OUTPUT:", raw[:500])
+        raise HTTPException(status_code=500, detail="Failed to parse model response")
 
     return {
         "videoId": video_id,
