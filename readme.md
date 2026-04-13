@@ -23,6 +23,6 @@ python -m http.server 3000
 
 ## Tech Stack
 - FastAPI (Python backend)
-- Anthropic Claude API (summarization)
+- Deepseek API (summarization)
 - youtube-transcript-api (real transcripts)
 - Vanilla JS frontend
