@@ -73,8 +73,7 @@ yt-summarizer/
 └── README.md
 ```
 
-## 🙌 Made by
-Muhammed Aman — B.Tech CSE (Cyber Security), MITS Kochi
+
 
 ---
 > "Why watch a lecture twice when GRUMPYDUCK can summarize it once?" 🦆
