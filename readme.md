@@ -10,7 +10,7 @@ cd backend
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp ../.env.example .env       # add your Anthropic API key
+cp ../.env.example .env       # add your openrouter key 
 uvicorn main:app --reload
 ```
 
