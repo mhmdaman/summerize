@@ -1,30 +1,30 @@
-# 🦆 GRUMPYDUCK- SUMMERIZER
+#  GRUMPYDUCK- SUMMERIZER
 
 An AI-powered YouTube video study notes generator. Paste any YouTube URL and get structured, exam-ready study notes — complete with key terms, examples, memory tricks, and practice questions.
 
-## 🚀 Live Demo
+## Live Demo
 [Coming soon]
 
-## 📸 Preview
+## Preview
 <!-- Add a screenshot here -->
 
-## ✨ Features
-- 📝 Converts YouTube videos into structured study notes
-- 🔑 Highlights key terms, definitions, and formulas
-- 💡 Adds examples, analogies, and memory tricks
-- ❓ Generates exam-style questions per section
-- 📋 Practice Q&A tab for revision
-- ⚡ Quick revision summary
-- 🖨️ Download notes as PDF
-- 🎨 Doodle-style UI
+##  Features
+- Converts YouTube videos into structured study notes
+- Highlights key terms, definitions, and formulas
+- Adds examples, analogies, and memory tricks
+- Generates exam-style questions per section
+- Practice Q&A tab for revision
+- Quick revision summary
+-  Download notes as PDF
+- Doodle-style UI
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **Backend** — Python, FastAPI, uvicorn
 - **AI** — OpenRouter API (DeepSeek)
 - **Transcript** — youtube-transcript-api
 - **Frontend** — Vanilla HTML, CSS, JavaScript
 
-## ⚙️ Setup
+## Setup
 
 ### 1. Clone the repo
 ```bash
@@ -50,7 +50,7 @@ python -m http.server 3000
 # Open http://localhost:3000
 ```
 
-## 🔑 Environment Variables
+## Environment Variables
 Create a `.env` file inside the `backend` folder:
 ```
 OPENROUTER_API_KEY=your_key_here
