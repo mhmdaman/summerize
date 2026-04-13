@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <title>Summerizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      
+      <h1>Summerizer</h1>
+      
+      <p class="desc">Save Your time!</p>
+    </header>
+
+    <div class="input-card">
+      <div class="url-row">
+        <input id="urlInput" type="text" placeholder="https://youtube.com/watch?v=..." />
+        <button id="btn" onclick="summarize()">Summarize</button>
+      </div>
+      <div class="options">
+        <span class="opt-label">Detail:</span>
+        <button class="pill active" id="pill-brief" onclick="setDetail('brief')">Brief</button>
+        <button class="pill" id="pill-standard" onclick="setDetail('standard')">Standard</button>
+        <button class="pill" id="pill-deep" onclick="setDetail('deep')">Deep Dive</button>
+      </div>
+    </div>
+
+    <div id="status" class="hidden"></div>
+    <div id="error" class="hidden"></div>
+    <div id="result"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
